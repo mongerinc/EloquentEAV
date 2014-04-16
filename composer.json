@@ -1,5 +1,5 @@
 {
-	"name": "mongerinc/EloquentEAV",
+	"name": "mongerinc/eloquent-eav",
 	"description": "Entity-Attribute-Value Relations for the Eloquent ORM",
 	"license": "MIT",
 	"authors": [
