@@ -20,7 +20,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Monger\\EloquentEAV": "src/"
+			"Monger\\EloquentEAV\\": "src/"
 		}
 	},
 	"minimum-stability": "dev"
