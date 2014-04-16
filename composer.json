@@ -1,0 +1,27 @@
+{
+	"name": "mongerinc/EloquentEAV",
+	"description": "Entity-Attribute-Value Relations for the Eloquent ORM",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Jan Hartigan",
+			"email": "jan@monger.com"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/mongerinc/EloquentEAV/issues"
+	},
+	"require": {
+		"php": ">=5.4.0",
+		"laravel/framework": "4.*"
+	},
+	"require-dev": {
+		"mockery/mockery": "0.8.0"
+	},
+	"autoload": {
+		"psr-04": {
+			"Monger\\EloquentEAV": "src/"
+		}
+	},
+	"minimum-stability": "dev"
+}
