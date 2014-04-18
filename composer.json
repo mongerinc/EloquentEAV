@@ -22,6 +22,5 @@
 		"psr-4": {
 			"Monger\\EloquentEAV\\": "src/"
 		}
-	},
-	"minimum-stability": "dev"
+	}
 }
