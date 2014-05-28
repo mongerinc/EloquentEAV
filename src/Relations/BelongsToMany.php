@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Eloquent\Collection;
 
-class HasOne extends Owner {
+class BelongsToMany extends Owned {
 
 	/**
 	 * Get the results of the relationship.
@@ -11,7 +11,7 @@ class HasOne extends Owner {
 	 */
 	public function getResults()
 	{
-		return $this->first();
+		return $this->get();
 	}
 
 	/**
@@ -26,7 +26,7 @@ class HasOne extends Owner {
 	{
 		foreach ($models as $model)
 		{
-			$model->setRelation($relation, null);
+			$model->setRelation($relation, $this->related->newCollection());
 		}
 
 		return $models;
@@ -42,7 +42,7 @@ class HasOne extends Owner {
 	 */
 	public function match(array $models, Collection $results, $relation)
 	{
-		return $this->matchOne($models, $results, $relation);
+		return $this->matchMany($models, $results, $relation);
 	}
 
 }

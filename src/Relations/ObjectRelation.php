@@ -1,10 +1,11 @@
 <?php namespace Monger\EloquentEAV\Relations;
 
+use Exception;
+use Monger\EloquentEAV\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model as BaseModel;
-use Illuminate\Database\Eloquent\Builder;
-use Monger\EloquentEAV\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 abstract class ObjectRelation extends Relation {
@@ -52,6 +53,13 @@ abstract class ObjectRelation extends Relation {
 	protected $attributeIds;
 
 	/**
+	 * The "name" of the relationship.
+	 *
+	 * @var string
+	 */
+	protected $relationName;
+
+	/**
 	 * The pivot table columns to retrieve.
 	 *
 	 * @var array
@@ -72,7 +80,8 @@ abstract class ObjectRelation extends Relation {
 	 *
 	 * @return void
 	 */
-	public function __construct(Builder $query, Model $parent, $table, $entityKey, $attributeKey, $entityNameField, $attributeNameField, array $attributeIds)
+	public function __construct(Builder $query, Model $parent, $table, $entityKey, $attributeKey, $entityNameField, $attributeNameField, array $attributeIds,
+											$relationName)
 	{
 		$this->table = $table;
 		$this->entityKey = $entityKey;
@@ -80,8 +89,67 @@ abstract class ObjectRelation extends Relation {
 		$this->entityNameField = $entityNameField;
 		$this->attributeNameField = $attributeNameField;
 		$this->attributeIds = $attributeIds;
+		$this->relationName = $relationName;
 
 		parent::__construct($query, $parent);
+	}
+
+	/**
+	 * Get the "local name field" in a relationship. For an owner relationship, this will be the entityNameField, and for the owned it will
+	 * be attributeNameField.
+	 *
+	 * @return string
+	 */
+	abstract public function getLocalNameField();
+
+	/**
+	 * Get the "other name field" in a relationship. For an owner relationship, this will be the attributeNameField, and for the owned it will
+	 * be entityNameField.
+	 *
+	 * @return string
+	 */
+	abstract public function getOtherNameField();
+
+	/**
+	 * Get the "local key" in a relationship. For an owner relationship, this will be the entityKey, and for the owned it will be attributeKey.
+	 *
+	 * @return string
+	 */
+	abstract public function getLocalKey();
+
+	/**
+	 * Get the "local key" in a relationship. For an owner relationship, this will be the attributeKey, and for the owned it will be entityKey.
+	 *
+	 * @return string
+	 */
+	abstract public function getOtherKey();
+
+	/**
+	 * Get the local type identifier in a relationship. For an owner relationship, this will be the entity name field, and for the owned it will
+	 * be attribute id.
+	 *
+	 * @return array
+	 */
+	abstract public function getLocalTypeId();
+
+	/**
+	 * Get the local type identifier in a relationship. For an owner relationship, this will be the attribute id, and for the owned it will
+	 * be entity name field.
+	 *
+	 * @return array
+	 */
+	abstract public function getOtherTypeId();
+
+	/**
+	 * Returns the field with the pivot table prepended
+	 *
+	 * @param string	$field
+	 *
+	 * @return string
+	 */
+	protected function prependTable($field)
+	{
+		return $this->table . '.' . $field;
 	}
 
 	/**
@@ -330,7 +398,7 @@ abstract class ObjectRelation extends Relation {
 	 */
 	protected function getAliasedPivotColumns()
 	{
-		$defaults = array($this->entityKey, $this->entityNameField);
+		$defaults = array($this->getLocalKey(), $this->getLocalNameField());
 
 		// We need to alias all of the pivot columns with the "pivot_" prefix so we
 		// can easily extract them out of the models and put them into the pivot
@@ -363,7 +431,7 @@ abstract class ObjectRelation extends Relation {
 
 		$key = $baseTable.'.'.$this->related->getKeyName();
 
-		$query->join($this->table, $key, '=', $this->getAttributeKey());
+		$query->join($this->table, $key, '=', $this->prependTable($this->getOtherKey()));
 
 		return $this;
 	}
@@ -375,7 +443,7 @@ abstract class ObjectRelation extends Relation {
 	 */
 	protected function setWhere()
 	{
-		$this->query->where($this->getEntityKey(), '=', $this->parent->getKey());
+		$this->query->where($this->prependTable($this->getLocalKey()), '=', $this->parent->getKey());
 
 		return $this->setNameFieldWheres();
 	}
@@ -391,8 +459,8 @@ abstract class ObjectRelation extends Relation {
 	{
 		$query = $query ?: $this->query;
 
-		$query->where($this->getEntityNameField(), '=', $this->parent->getEntityType())
-				->whereIn($this->getAttributeNameField(), $this->attributeIds);
+		$query->whereIn($this->prependTable($this->getLocalNameField()), $this->getLocalTypeId())
+				->whereIn($this->prependTable($this->getOtherNameField()), $this->getOtherTypeId());
 
 		return $this;
 	}
@@ -406,7 +474,7 @@ abstract class ObjectRelation extends Relation {
 	 */
 	public function addEagerConstraints(array $models)
 	{
-		$this->query->whereIn($this->getEntityKey(), $this->getKeys($models));
+		$this->query->whereIn($this->prependTable($this->getLocalKey()), $this->getKeys($models));
 
 		$this->setNameFieldWheres();
 	}
@@ -640,7 +708,7 @@ abstract class ObjectRelation extends Relation {
 		// First we need to attach any of the associated models that are not currently
 		// in this joining table. We'll spin through the given IDs, checking to see
 		// if they exist in the array of current ones, and if not we will insert.
-		$current = $this->newPivotQuery()->lists($this->attributeKey);
+		$current = $this->newPivotQuery()->lists($this->getOtherKey());
 
 		$records = $this->formatSyncList($ids);
 
@@ -832,19 +900,18 @@ abstract class ObjectRelation extends Relation {
 	 *
 	 * @param  int   $id
 	 * @param  bool  $timed
-	 * @param  int   $attributeId
 	 *
 	 * @return array
 	 */
-	protected function createAttachRecord($id, $timed, $attributeId)
+	protected function createAttachRecord($id, $timed)
 	{
-		$record[$this->entityKey] = $this->parent->getKey();
+		$record[$this->getLocalKey()] = $this->parent->getKey();
 
-		$record[$this->attributeKey] = $id;
+		$record[$this->getOtherKey()] = $id;
 
-		$record[$this->entityNameField] = $this->parent->getEntityType();
+		$record[$this->getLocalNameField()] = $this->getLocalTypeId()[0];
 
-		$record[$this->attributeNameField] = $attributeId;
+		$record[$this->getOtherNameField()] = $this->getOtherTypeId()[0];
 
 		// If the record needs to have creation and update timestamps, we will make
 		// them by calling the parent model's "freshTimestamp" method which will
@@ -895,7 +962,7 @@ abstract class ObjectRelation extends Relation {
 
 		if (count($ids) > 0)
 		{
-			$query->whereIn($this->attributeKey, $ids);
+			$query->whereIn($this->getOtherKey(), $ids);
 		}
 
 		if ($touch) $this->touchIfTouching();
@@ -951,7 +1018,7 @@ abstract class ObjectRelation extends Relation {
 
 		$this->setNameFieldWheres($query);
 
-		return $query->where($this->entityKey, $this->parent->getKey());
+		return $query->where($this->getLocalKey(), $this->parent->getKey());
 	}
 
 	/**
@@ -978,8 +1045,8 @@ abstract class ObjectRelation extends Relation {
 
 		$this->setNameFieldWheres($pivot);
 
-		return $pivot->where($this->entityKey, $key)
-						->where($this->attributeKey, $id);
+		return $pivot->where($this->getLocalKey(), $key)
+						->where($this->getOtherKey(), $id);
 	}
 
 	/**
@@ -993,7 +1060,7 @@ abstract class ObjectRelation extends Relation {
 	{
 		$pivot = $this->related->newPivot($this->parent, $attributes, $this->table, $exists);
 
-		return $pivot->setPivotKeys($this->entityKey, $this->attributeKey);
+		return $pivot->setPivotKeys($this->getLocalKey(), $this->getOtherKey());
 	}
 
 	/**
@@ -1049,47 +1116,7 @@ abstract class ObjectRelation extends Relation {
 	 */
 	public function getHasCompareKey()
 	{
-		return $this->getEntityKey();
-	}
-
-	/**
-	 * Get the fully qualified foreign key for the relation.
-	 *
-	 * @return string
-	 */
-	public function getEntityKey()
-	{
-		return $this->table.'.'.$this->entityKey;
-	}
-
-	/**
-	 * Get the fully qualified "other key" for the relation.
-	 *
-	 * @return string
-	 */
-	public function getAttributeKey()
-	{
-		return $this->table.'.'.$this->attributeKey;
-	}
-
-	/**
-	 * Get the fully qualified foreign key for the relation.
-	 *
-	 * @return string
-	 */
-	public function getEntityNameField()
-	{
-		return $this->table.'.'.$this->entityNameField;
-	}
-
-	/**
-	 * Get the fully qualified "other key" for the relation.
-	 *
-	 * @return string
-	 */
-	public function getAttributeNameField()
-	{
-		return $this->table.'.'.$this->attributeNameField;
+		return $this->prependTable($this->getLocalKey());
 	}
 
 	/**

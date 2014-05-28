@@ -84,7 +84,7 @@ abstract class Model extends BaseModel {
 	}
 
 	/**
-	 * Define a many-to-many relationship.
+	 * Define a one-to-many owner relationship.
 	 *
 	 * @param string	$related
 	 * @param array		$attributeIds
@@ -99,7 +99,8 @@ abstract class Model extends BaseModel {
 
 		$attributeIds = $this->getInstanceAttributeIds($instance, $attributeIds);
 
-		return new HasMany($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds);
+		return new HasMany($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds,
+							$this->getBelongsToManyCaller());
 	}
 
 	/**
@@ -117,7 +118,8 @@ abstract class Model extends BaseModel {
 
 		$attributeIds = $this->getInstanceAttributeIds($instance, null);
 
-		return new HasOne($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds);
+		return new HasOne($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds,
+							$this->getBelongsToManyCaller());
 	}
 
 	/**
@@ -136,11 +138,32 @@ abstract class Model extends BaseModel {
 		$attributeIds = $this->getInstanceAttributeIds($this, null);
 
 		//the BelongsTo object relation is effectively the same as a HasOne with the fields reversed
-		return new BelongsTo($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds);
+		return new BelongsTo($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds,
+							$this->getBelongsToManyCaller());
 	}
 
 	/**
-	 * Define a one-to-many EAV relationship
+	 * Define a one-to-many owned EAV relationship
+	 *
+	 * @param string	$instance
+	 *
+	 * @return \Monger\EloquentEAV\Relations\BelongsToMany
+	 */
+	public function belongsToManyEav($related)
+	{
+		$instance = new $related;
+
+		$query = $instance->newQuery();
+
+		$attributeIds = $this->getInstanceAttributeIds($this, null);
+
+		//the BelongsTo object relation is effectively the same as a HasOne with the fields reversed
+		return new BelongsToMany($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds,
+							$this->getBelongsToManyCaller());
+	}
+
+	/**
+	 * Gets the provided model's attribute id(s) as an array
 	 *
 	 * @param \Monger\EloquentEAV\Model	$instance
 	 * @param mixed								$attributeIds

@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Eloquent\Collection;
 
-class HasMany extends ObjectRelation {
+class HasMany extends Owner {
 
 	/**
 	 * Get the results of the relationship.
