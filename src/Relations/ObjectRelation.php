@@ -398,7 +398,7 @@ abstract class ObjectRelation extends Relation {
 	 */
 	protected function getAliasedPivotColumns()
 	{
-		$defaults = array($this->getLocalKey(), $this->getLocalNameField());
+		$defaults = array($this->getLocalKey(), $this->getLocalNameField(), $this->getOtherKey(), $this->getOtherNameField());
 
 		// We need to alias all of the pivot columns with the "pivot_" prefix so we
 		// can easily extract them out of the models and put them into the pivot
@@ -559,7 +559,7 @@ abstract class ObjectRelation extends Relation {
 	 */
 	protected function buildDictionary(Collection $results)
 	{
-		$foreign = $this->entityKey;
+		$foreign = $this->getLocalKey();
 
 		// First we will build a dictionary of child models keyed by the foreign key
 		// of the relation so that we will easily and quickly match them to their
@@ -982,9 +982,9 @@ abstract class ObjectRelation extends Relation {
 	 */
 	public function touchIfTouching()
 	{
-	 	if ($this->touchingParent()) $this->getParent()->touch();
+		if ($this->touchingParent()) $this->getParent()->touch();
 
-	 	if ($this->getParent()->touches($this->relationName)) $this->touch();
+		if ($this->getParent()->touches($this->relationName)) $this->touch();
 	}
 
 	/**
