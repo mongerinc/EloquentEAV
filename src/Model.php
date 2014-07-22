@@ -205,27 +205,15 @@ abstract class Model extends BaseModel {
 	}
 
 	/**
-	 * Get a new query builder for the model's table.
+	 * Create a new Eloquent query builder for the model.
 	 *
-	 * @param  bool  $excludeDeleted
+	 * @param  \Illuminate\Database\Query\Builder $query
 	 *
 	 * @return \Monger\EloquentEAV\Builder|static
 	 */
-	public function newQuery($excludeDeleted = true)
+	public function newEloquentBuilder($query)
 	{
-		$builder = new Builder($this->newBaseQueryBuilder());
-
-		// Once we have the query builders, we will set the model instances so the
-		// builder can easily access any information it may need from the model
-		// while it is constructing and executing various queries against it.
-		$builder->setModel($this)->with($this->with);
-
-		if ($excludeDeleted and $this->softDelete)
-		{
-			$builder->whereNull($this->getQualifiedDeletedAtColumn());
-		}
-
-		return $builder;
+		return new Builder($query);
 	}
 
 	/**
