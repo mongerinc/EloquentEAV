@@ -5,6 +5,7 @@ use Monger\EloquentEAV\Relations\StringAttribute;
 use Monger\EloquentEAV\Relations\HasMany;
 use Monger\EloquentEAV\Relations\HasOne;
 use Monger\EloquentEAV\Relations\BelongsTo;
+use Monger\EloquentEAV\Relations\BelongsToMany;
 
 abstract class Model extends BaseModel {
 
