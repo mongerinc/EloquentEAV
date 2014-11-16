@@ -832,6 +832,47 @@ abstract class ObjectRelation extends Relation {
 	}
 
 	/**
+	 * Gets the insert value of a relation
+	 *
+	 * @param  mixed  $id
+	 * @param  array  $attributes
+	 * @param  bool   $touch
+	 * @return void
+	 */
+	public function getRelationInsert($id, array $attributes = array(), $touch = true)
+	{
+		return $this->getRelationInserts($id, $attributes, $touch)[0];
+	}
+
+	/**
+	 * Gets the insert value of a list of relations
+	 *
+	 * @param  mixed  $id
+	 * @param  array  $attributes
+	 * @param  bool   $touch
+	 * @return void
+	 */
+	public function getRelationInserts($id, array $attributes = array(), $touch = true)
+	{
+		if ($id instanceof Model) $id = $id->getKey();
+
+		return $this->createAttachRecords((array) $id, $attributes);
+	}
+
+	/**
+	 * Inserts a set of relations
+	 *
+	 * @param  array  $relations
+	 * @return void
+	 */
+	public function insertRelations(array $relations)
+	{
+		$query = $this->newPivotStatement();
+
+		$query->insert($relations);
+	}
+
+	/**
 	 * Create an array of records to insert into the pivot table.
 	 *
 	 * @param  array  $ids
