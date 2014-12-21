@@ -869,7 +869,8 @@ abstract class ObjectRelation extends Relation {
 	{
 		$query = $this->newPivotStatement();
 
-		$query->insert($relations);
+		if ($relations)
+			$query->insert($relations);
 	}
 
 	/**
