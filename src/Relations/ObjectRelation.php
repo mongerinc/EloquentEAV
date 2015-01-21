@@ -1165,7 +1165,7 @@ abstract class ObjectRelation extends Relation {
 	 *
 	 * @return string
 	 */
-	protected function getQualifiedParentKeyName()
+	public function getQualifiedParentKeyName()
 	{
 		return $this->parent->getQualifiedKeyName();
 	}
