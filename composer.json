@@ -13,7 +13,7 @@
 	},
 	"require": {
 		"php": ">=5.4.0",
-		"illuminate/database": "4.*"
+		"illuminate/database": "5.*"
 	},
 	"require-dev": {
 		"mockery/mockery": "0.9.0"
