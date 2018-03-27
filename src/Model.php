@@ -101,7 +101,7 @@ abstract class Model extends BaseModel {
 		$attributeIds = $this->getInstanceAttributeIds($instance, $attributeIds);
 
 		return new HasMany($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds,
-							$this->getBelongsToManyCaller());
+							$this->guessBelongsToManyRelation());
 	}
 
 	/**
@@ -120,7 +120,7 @@ abstract class Model extends BaseModel {
 		$attributeIds = $this->getInstanceAttributeIds($instance, null);
 
 		return new HasOne($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds,
-							$this->getBelongsToManyCaller());
+							$this->guessBelongsToManyRelation());
 	}
 
 	/**
@@ -140,7 +140,7 @@ abstract class Model extends BaseModel {
 
 		//the BelongsTo object relation is effectively the same as a HasOne with the fields reversed
 		return new BelongsTo($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds,
-							$this->getBelongsToManyCaller());
+							$this->guessBelongsToManyRelation());
 	}
 
 	/**
@@ -160,7 +160,7 @@ abstract class Model extends BaseModel {
 
 		//the BelongsTo object relation is effectively the same as a HasOne with the fields reversed
 		return new BelongsToMany($query, $this, 'monger.ObjectAttributes', 'objectID', 'value', 'objectType', 'attributeID', $attributeIds,
-							$this->getBelongsToManyCaller());
+							$this->guessBelongsToManyRelation());
 	}
 
 	/**
