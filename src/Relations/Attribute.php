@@ -147,7 +147,7 @@ abstract class Attribute extends HasOneOrMany {
 	 * @param  array  $attributes
 	 * @return \Illuminate\Database\Eloquent\Model
 	 */
-	public function create(array $attributes)
+	public function create(array $attributes = [])
 	{
 		$foreign = $this->getForeignAttributesForCreate();
 
